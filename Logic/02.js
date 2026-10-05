@@ -10,7 +10,7 @@ async function randomProcess() {
   return Math.random() < 0.5
 }
 
-// 6
+// 1
 
 const jobs = [
   { id: 1, type: 'email' },
@@ -60,7 +60,7 @@ class JobProcessor {
     }
 }
 
-// 7
+// 2
 
 const users = [
   { id: 1, name: 'Ana' },
@@ -128,5 +128,109 @@ class UsersSyncService {
                 })
             }))
         }
+    }
+}
+
+// 3
+
+const logs = [
+  { userId: 1, type: 'LOGIN', timestamp: 1000 },
+  { userId: 2, type: 'LOGIN', timestamp: 1200 },
+  { userId: 1, type: 'ACCESS_DENIED', timestamp: 1400 },
+  { userId: 1, type: 'LOGIN', timestamp: 1600 },
+  { userId: 2, type: 'ACCESS_DENIED', timestamp: 1700 },
+  { userId: 1, type: 'ACCESS_DENIED', timestamp: 1800 }
+]
+
+function summarizeLogs(logs) {
+    const result = logs.reduce((acc, ct) => {
+        const userId = ct.userId
+        const userIndex = acc.findIndex(u => u.userId === userId)
+
+        if (userIndex !== -1) {
+            acc[userIndex] = {
+                ...acc[userIndex],
+                total: acc[userIndex].total + 1,
+                events: {
+                    ...acc[userIndex].events,
+                    [ct.type]: acc[userIndex].events[ct.type] ? acc[userIndex].events[ct.type] + 1 : 1 
+                }
+            }
+        } else {
+            acc = [...acc, {
+                userId,
+                total: 1,
+                events: {
+                    [ct.type]: 1
+                }
+            }]
+        }
+
+        return acc
+    }, [])
+
+    return result
+}
+
+function summarizeLogsMap(logs) {
+    const results = new Map()
+
+    logs.forEach(log => {
+        const userLog = results.get(log.userId)
+        const userLogTotal = userLog?.total ?? 0
+        const userLogEventType = userLog?.events[log.type] ?? 0
+        const userLogLastEvent = userLog?.lastEventAt ?? 0
+
+        results.set(log.userId, {
+            userId: log.userId,
+            total: userLogTotal + 1,
+            events: {
+                ...userLog?.events,
+                [log.type]: userLogEventType + 1
+            },
+            lastEventAt: log.timestamp > userLogLastEvent ? log.timestamp : userLogLastEvent
+        })
+    })
+
+    return [...results.values()]
+}
+
+// 4
+
+async function fetchUser(id) {
+  const delay = Math.floor(Math.random() * 1000) + 500
+
+  await sleep(delay)
+
+  return {
+    id,
+    name: `User ${id}`,
+    fetchedAt: Date.now()
+  }
+}
+
+class CacheService {
+    options = {
+        ttl: 5000
+    }
+    storage = new Map()
+
+    async get(key) {
+        const now = Date.now()
+        const cache = this.storage.get(key)
+
+        if (cache && cache.expiresAt > now) {
+            return cache.value
+        }
+
+        const userId = key.split(':')[1]
+        const user = await fetchUser(userId)
+
+        this.storage.set(key, {
+            value: user,
+            expiresAt: now + this.options.ttl
+        })
+
+        return user
     }
 }
