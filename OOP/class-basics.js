@@ -279,3 +279,46 @@ class InvalidVersionError extends Error {
         super(`Invalid encrypter version! Cause: ${cause ?? 'Unknown cause'}`)
     }
 }
+
+/**
+ * 1. new
+ * 
+ * - Create an empty object
+ * - Set the keyword this tb be that object
+ * - Returns the object - returns this
+ */
+
+// Factory functions
+
+class UserClass {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+        this.isAdmin = false;
+    }
+
+    sayHi() {
+        return console.log(`${this.name} says hi!`);
+    }
+
+    say(something) {
+        return console.log(`${this.name} says ${something}`)
+    }
+}
+
+function UserFunction(name, email) {
+    this.name = name;
+    this.email = email;
+    this.isAdmin = false;
+
+    this.sayHi = () => {
+        return console.log(`${this.name} says hi!`);
+    }
+    this.say = (something) => {
+        return console.log(`${this.name} says ${something}`)
+    }
+}
+
+const userF = new UserFunction('gab', 'gab@email.com')
+
+const userC = new UserClass('vic', 'vic@gmail.com')
